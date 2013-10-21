@@ -124,7 +124,6 @@ void modesAcceptClients(void) {
             int len;
             char *sbsmsg = aircraftsToSBS(&len);
             if (sbsmsg) {
-                printf("%s", sbsmsg);
                 write(fd, sbsmsg, len);
                 free(sbsmsg);                
             }
