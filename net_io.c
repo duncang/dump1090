@@ -29,6 +29,7 @@
 //
 
 #include "dump1090.h"
+char *aircraftsToSBS(int *len);
 //
 // ============================= Networking =============================
 //
@@ -118,6 +119,17 @@ void modesAcceptClients(void) {
         if (services[j] == Modes.ros)   Modes.stat_raw_connections++;
         if (services[j] == Modes.bos)   Modes.stat_beast_connections++;
 
+        if (services[j] == Modes.sbsos) {
+            // Send current traffic, if any, immediately
+            int len;
+            char *sbsmsg = aircraftsToSBS(&len);
+            if (sbsmsg) {
+                printf("%s", sbsmsg);
+                write(fd, sbsmsg, len);
+                free(sbsmsg);                
+            }
+        }
+        
         j--; // Try again with the same listening port
 
         if (Modes.debug & MODES_DEBUG_NET)
@@ -617,6 +629,72 @@ char *aircraftsToJson(int *len) {
     *len = p-buf;
     return buf;
 }
+
+//
+//=========================================================================
+//
+// Return a description of planes in SBS format. This can be sent to a client
+// when they first connect so traffic display is immediate.
+//
+char *aircraftsToSBS(int *len) {
+    struct aircraft *a = Modes.aircrafts;
+    int buflen = 1024; // The initial buffer is incremented as needed
+    char *buf = (char *) malloc(buflen), *p = buf;
+    int l;
+
+    while(a) {
+        if (a->modeACflags & MODEAC_MSG_FLAG) { // skip any fudged ICAO records Mode A/C
+            a = a->next;
+            continue;
+        }
+        
+        if (a->bFlags & MODES_ACFLAGS_CALLSIGN_VALID) {
+            // Create a MSG,1
+            l = snprintf(p, buflen, "MSG,3,,,%06x,,,,,,%s,,,,,,,,,,,\n", a->addr, a->flight);
+            p += l; buflen -= l;
+        }
+        //Resize if needed
+        if (buflen < 256) {
+            int used = p-buf;
+            buflen += 1024; // Our increment.
+            buf = (char *) realloc(buf,used+buflen);
+            p = buf+used;
+        }
+
+        if (a->bFlags & MODES_ACFLAGS_LATLON_VALID && a->bFlags & MODES_ACFLAGS_ALTITUDE_VALID) {
+            // Create a MSG,3
+            l = snprintf(p, buflen, "MSG,3,,,%06x,,,,,,,%d,,,%f,%f,,,,,,\n", a->addr, a->altitude, a->lat, a->lon);
+            p += l; buflen -= l;
+        }
+        //Resize if needed
+        if (buflen < 256) {
+            int used = p-buf;
+            buflen += 1024; // Our increment.
+            buf = (char *) realloc(buf,used+buflen);
+            p = buf+used;
+        }
+        
+        if (a->bFlags & MODES_ACFLAGS_HEADING_VALID && a->bFlags & MODES_ACFLAGS_SPEED_VALID && a->bFlags & MODES_ACFLAGS_VERTRATE_VALID) {
+            // Create a MSG,4
+            l = snprintf(p, buflen, "MSG,4,,,%06x,,,,,,,,%d,%d,,,%d,,,,,\n", a->addr, a->speed, a->track,a->vert_rate);
+            p += l; buflen -= l;
+        }
+        //Resize if needed
+        if (buflen < 256) {
+            int used = p-buf;
+            buflen += 1024; // Our increment.
+            buf = (char *) realloc(buf,used+buflen);
+            p = buf+used;
+        }
+        
+        a = a->next;
+    }
+    
+    *len = p-buf;
+    return buf;
+}
+
+
 //
 //=========================================================================
 //
