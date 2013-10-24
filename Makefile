@@ -4,6 +4,10 @@
 #
 PROGNAME=dump1090
 
+ifndef PREFIX
+PREFIX=/usr/local
+endif
+
 ifdef PREFIX
 BINDIR=$(PREFIX)/bin
 SHAREDIR=$(PREFIX)/share/$(PROGNAME)
@@ -25,6 +29,11 @@ dump1090: dump1090.o anet.o interactive.o mode_ac.o mode_s.o net_io.o
 
 view1090: view1090.o anet.o interactive.o mode_ac.o mode_s.o net_io.o
 	$(CC) -g -o view1090 view1090.o anet.o interactive.o mode_ac.o mode_s.o net_io.o $(LIBS)
+
+install: dump1090 view1090 
+	cp dump1090 view1090 $(BINDIR)
+	mkdir $(SHAREDIR)
+	cp -a public_html $(SHAREDIR)
 
 clean:
 	rm -f *.o dump1090 view1090
