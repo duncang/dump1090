@@ -33,7 +33,7 @@ view1090: view1090.o anet.o interactive.o mode_ac.o mode_s.o net_io.o
 install: dump1090 view1090 
 	cp dump1090 view1090 $(BINDIR)
 	mkdir $(SHAREDIR)
-	cp -a public_html $(SHAREDIR)
+	cp -a public_html/* $(SHAREDIR)
 
 clean:
 	rm -f *.o dump1090 view1090
