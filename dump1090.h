@@ -173,7 +173,7 @@
 #define MODES_NET_SNDBUF_SIZE (1024*64)
 
 #ifndef HTMLPATH
-#define HTMLPATH   "./public_html"      // default path for gmap.html etc
+#define HTMLPATH   "/usr/local/share/dump1090/public_html"      // default path for gmap.html etc
 #endif
 
 #define MODES_NOTUSED(V) ((void) V)
@@ -216,6 +216,9 @@ struct aircraft {
     uint64_t      odd_cprtime;
     uint64_t      even_cprtime;
     double        lat, lon;       // Coordinated obtained from CPR encoded data
+    int           NIC;
+    char          emitterSet;
+    int           emitterCategory;
     int           bFlags;         // Flags related to valid fields in this structure
     struct aircraft *next;        // Next aircraft in our linked list
 };
@@ -370,6 +373,10 @@ struct modesMessage {
     int    ns_velocity;         // N/S velocity.
     int    vert_rate;           // Vertical rate.
     int    velocity;            // Reported by aircraft, or computed from from EW and NS velocity
+    int    NIC;                 // Navigation Integrity Category
+    int    NICSuppB;
+    char   emitterSet;          // 1 = D; 2 = C; 3 = B; 4 = D;
+    int    emitterCategory;     // 
 
     // DF4, DF5, DF20, DF21
     int  fs;                    // Flight status for DF4,5,20,21

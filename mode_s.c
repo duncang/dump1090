@@ -966,11 +966,55 @@ void decodeModesMessage(struct modesMessage *mm, unsigned char *msg) {
 
             mm->flight[8] = '\0';
 
+            mm->emitterCategory = msg[4] & 7; // encoded as me->subtype
+
+            switch (metype)
+            {
+            	case 1: mm->emitterSet = 'D'; break;
+            	case 2: mm->emitterSet = 'C'; break;
+				case 3: mm->emitterSet = 'B'; break;
+				case 4: mm->emitterSet = 'A'; break;
+				default: mm->emitterSet = 'Z';
+            }
+
+
         } else if (metype >= 5 && metype <= 18) { // Position Message
             mm->raw_latitude  = ((msg[6] & 3) << 15) | (msg[7] << 7) | (msg[8] >> 1);
             mm->raw_longitude = ((msg[8] & 1) << 16) | (msg[9] << 8) | (msg[10]);
             mm->bFlags       |= (mm->msg[6] & 0x04) ? MODES_ACFLAGS_LLODD_VALID 
                                                     : MODES_ACFLAGS_LLEVEN_VALID;
+
+
+            // decode NIC Supplement
+            mm->NICSuppB = msg[4] & 1; 
+
+            // NIC is encoded in the type - Note: Also need NIC SuppA to fully decode - choose the lower values for now
+            switch (metype)
+            {
+
+            	// surface position
+            	case 5: mm->NIC = 11; break;
+            	case 6: mm->NIC = 10; break;
+            	case 7: mm->NIC = 8; break;
+            	case 8: mm->NIC = 0; break;
+
+            	// airborne position
+            	case 9: mm->NIC = 11; break;
+            	case 10: mm->NIC = 10; break;
+            	case 11: mm->NIC = 8; break;
+            	case 12: mm->NIC = 7; break;
+            	case 13: mm->NIC = 6; break;
+            	case 14: mm->NIC = 5; break;
+            	case 15: mm->NIC = 4; break;
+            	case 16: mm->NIC = 2; break;
+            	case 17: mm->NIC = 1; break;
+            	case 18: mm->NIC = 0; break;
+
+
+            	default: mm->NIC = 0;
+
+            }
+
             if (metype >= 9) {        // Airborne
                 int AC12Field = ((msg[5] << 4) | (msg[6] >> 4)) & 0x0FFF;
                 mm->bFlags |= MODES_ACFLAGS_AOG_VALID;
@@ -1249,6 +1293,20 @@ void displayModesMessage(struct modesMessage *mm) {
                 printf("    Latitude : %d (not decoded)\n", mm->raw_latitude);
                 printf("    Longitude: %d (not decoded)\n", mm->raw_longitude);
             }
+
+            // NIC is encoded in me type field; need to look at NIC Supplement to resolve ambiguity
+            // 	metype 	NIC
+            //	9		11
+            //	10		10
+            //	11		8 or 9
+            //	12		7
+            //	13		6
+            //	14		5
+            // 	15		4
+            //	16		3 or 2
+            //	17		1
+            //	18		0
+
 
         } else if (mm->metype == 19) { // Airborne Velocity
             if (mm->mesub == 1 || mm->mesub == 2) {

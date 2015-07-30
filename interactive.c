@@ -58,6 +58,9 @@ struct aircraft *interactiveCreateAircraft(struct modesMessage *mm) {
     a->lat  = a->lon = 0.0;
     memset(a->signalLevel, mm->signalLevel, 8); // First time, initialise everything
                                                 // to the first signal strength
+    a->emitterCategory = 0;
+    a->emitterSet = '-';
+
 
     // mm->msgtype 32 is used to represent Mode A/C. These values can never change, so 
     // set them once here during initialisation, and don't bother to set them every 
@@ -72,6 +75,9 @@ struct aircraft *interactiveCreateAircraft(struct modesMessage *mm) {
             mm->bFlags  |= MODES_ACFLAGS_ALTITUDE_VALID;
         } 
     }
+
+
+
     return (a);
 }
 //
@@ -215,6 +221,11 @@ struct aircraft *interactiveReceiveData(struct modesMessage *mm) {
     // If a (new) CALLSIGN has been received, copy it to the aircraft structure
     if (mm->bFlags & MODES_ACFLAGS_CALLSIGN_VALID) {
         memcpy(a->flight, mm->flight, sizeof(a->flight));
+    
+        // set the emitter category which is received with FlightID
+        a->emitterCategory = mm->emitterCategory;
+        a->emitterSet = mm->emitterSet;
+
     }
 
     // If a (new) ALTITUDE has been received, copy it to the aircraft structure
@@ -291,7 +302,12 @@ struct aircraft *interactiveReceiveData(struct modesMessage *mm) {
                 mm->fLon    = a->lon;
             }
         }
+
+        // copy NIC - included with position message
+        a->NIC = mm->NIC;
     }
+
+
 
     // Update the aircrafts a->bFlags to reflect the newly received mm->bFlags;
     a->bFlags |= mm->bFlags;
@@ -349,7 +365,7 @@ void interactiveShowData(void) {
 
     if (Modes.interactive_rtl1090 == 0) {
         printf (
-"Hex     Mode  Sqwk  Flight   Alt    Spd  Hdg    Lat      Long   Sig  Msgs   Ti%c\n", progress);
+"Hex     Mode  Sqwk  Flight   Alt    Spd  Hdg    Lat      Long   NIC  CAT   Sig  Msgs   Ti%c\n", progress);
     } else {
         printf (
 "Hex    Flight   Alt      V/S GS  TT  SSR  G*456^ Msgs    Seen %c\n", progress);
@@ -427,9 +443,9 @@ void interactiveShowData(void) {
                         snprintf(strFl, 6, "%5d", altitude);
                     }
  
-                    printf("%06x  %-4s  %-4s  %-8s %5s  %3s  %3s  %7s %8s  %3d %5d   %2d\n",
+                    printf("%06x  %-4s  %-4s  %-8s %5s  %3s  %3s  %7s %8s  %2d    %c:%1d    %3d %5d   %2d\n",
                     a->addr, strMode, strSquawk, a->flight, strFl, strGs, strTt,
-                    strLat, strLon, signalAverage, msgs, (int)(now - a->seen));
+                    strLat, strLon, a->NIC, a->emitterSet, a->emitterCategory, signalAverage, msgs, (int)(now - a->seen));
                 }
                 count++;
             }

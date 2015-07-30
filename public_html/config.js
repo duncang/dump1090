@@ -11,8 +11,8 @@ Metric = false; // true or false
 
 // -- Map settings ----------------------------------------
 // The Latitude and Longitude in decimal format
-CONST_CENTERLAT = -25.0;
-CONST_CENTERLON = 133.0;
+CONST_CENTERLAT = -27.0;
+CONST_CENTERLON = 153.0;
 // The google maps zoom level, 0 - 16, lower is further out
 CONST_ZOOMLVL   = 3;
 

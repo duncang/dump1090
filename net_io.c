@@ -750,6 +750,8 @@ int handleHTTPRequest(struct client *c, char *p) {
         snprintf(getFile, sizeof getFile, "%s/%s", HTMLPATH, url);
     }
 
+    printf("using gmap path: %s\n", getFile);
+
     // Select the content to send, we have just two so far:
     // "/" -> Our google map application.
     // "/data.json" -> Our ajax request to update planes.
