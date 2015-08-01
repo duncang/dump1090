@@ -1127,6 +1127,12 @@ void decodeModesMessage(struct modesMessage *mm, unsigned char *msg) {
             mm->flight[4] = ais_charset[chars & 0x3F];
 
             mm->flight[8] = '\0';
+
+            // if flightID received via DF 20/21 message, emitter Category not availble.
+            mm->emitterCategory = 0;
+            mm->emitterSet = 'X';
+
+
         } else {
         }
     }
