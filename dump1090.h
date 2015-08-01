@@ -140,6 +140,7 @@
 #define MODES_ACFLAGS_FS_VALID       (1<<13) // Aircraft Flight Status is known 
 #define MODES_ACFLAGS_NSEWSPD_VALID  (1<<14) // Aircraft EW and NS Speed is known
 #define MODES_ACFLAGS_LATLON_REL_OK  (1<<15) // Indicates it's OK to do a relative CPR
+#define MODES_ACFLAGS_ACOPSTATUS_VALID (1<<16) // Indicates that aircraft operational status message is received and fields decoded
 
 #define MODES_ACFLAGS_LLEITHER_VALID (MODES_ACFLAGS_LLEVEN_VALID | MODES_ACFLAGS_LLODD_VALID) 
 #define MODES_ACFLAGS_LLBOTH_VALID   (MODES_ACFLAGS_LLEVEN_VALID | MODES_ACFLAGS_LLODD_VALID)
@@ -216,7 +217,12 @@ struct aircraft {
     uint64_t      odd_cprtime;
     uint64_t      even_cprtime;
     double        lat, lon;       // Coordinated obtained from CPR encoded data
+    int           DO260Version;        // ADS-B version number;
+    int           SIL, SILSupp;        // Surveillance integrity level
+    int           NACp;             // Navigation Accuracy Category - Position
     int           NIC;
+    int           NICSuppA, NICSuppB, NICSuppC;
+    int           type, subtype; // used for decoding NIC
     char          emitterSet;
     int           emitterCategory;
     int           bFlags;         // Flags related to valid fields in this structure
@@ -373,10 +379,13 @@ struct modesMessage {
     int    ns_velocity;         // N/S velocity.
     int    vert_rate;           // Vertical rate.
     int    velocity;            // Reported by aircraft, or computed from from EW and NS velocity
-    int    NIC;                 // Navigation Integrity Category
-    int    NICSuppB;
+    int    NICSuppA, NICSuppB, NICSuppC;
     char   emitterSet;          // 1 = D; 2 = C; 3 = B; 4 = D;
     int    emitterCategory;     // 
+    int    DO260Version;        // ADS-B version number;
+    int    SIL, SILSupp;        // Surveillance integrity level
+    int    NACp;                // Navigation Accuracy Category - Position
+
 
     // DF4, DF5, DF20, DF21
     int  fs;                    // Flight status for DF4,5,20,21

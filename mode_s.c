@@ -988,32 +988,7 @@ void decodeModesMessage(struct modesMessage *mm, unsigned char *msg) {
             // decode NIC Supplement
             mm->NICSuppB = msg[4] & 1; 
 
-            // NIC is encoded in the type - Note: Also need NIC SuppA to fully decode - choose the lower values for now
-            switch (metype)
-            {
 
-            	// surface position
-            	case 5: mm->NIC = 11; break;
-            	case 6: mm->NIC = 10; break;
-            	case 7: mm->NIC = 8; break;
-            	case 8: mm->NIC = 0; break;
-
-            	// airborne position
-            	case 9: mm->NIC = 11; break;
-            	case 10: mm->NIC = 10; break;
-            	case 11: mm->NIC = 8; break;
-            	case 12: mm->NIC = 7; break;
-            	case 13: mm->NIC = 6; break;
-            	case 14: mm->NIC = 5; break;
-            	case 15: mm->NIC = 4; break;
-            	case 16: mm->NIC = 2; break;
-            	case 17: mm->NIC = 1; break;
-            	case 18: mm->NIC = 0; break;
-
-
-            	default: mm->NIC = 0;
-
-            }
 
             if (metype >= 9) {        // Airborne
                 int AC12Field = ((msg[5] << 4) | (msg[6] >> 4)) & 0x0FFF;
@@ -1104,6 +1079,19 @@ void decodeModesMessage(struct modesMessage *mm, unsigned char *msg) {
                     mm->heading = ((((msg[5] & 0x03) << 8) | msg[6]) * 45) >> 7;
                 }
             }
+        } else if (metype == 29) { // Target State and Status Information
+
+
+
+
+        } else if (metype == 31) { // Aircraft Operational Status Message
+        	mm->DO260Version = (msg[9] & 0xE0) >> 5;
+        	mm->NICSuppA = (msg[9] & 0x10) >> 4;
+        	mm->NACp = (msg[9] & 0x0F);
+        	mm->SIL = (msg[10] & 0x30) >> 4;
+        	mm->SILSupp = (msg[10] >> 1) & 0x01;
+
+        	mm->bFlags |= MODES_ACFLAGS_ACOPSTATUS_VALID;
         }
     }
 

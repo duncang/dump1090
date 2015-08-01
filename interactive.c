@@ -62,6 +62,13 @@ struct aircraft *interactiveCreateAircraft(struct modesMessage *mm) {
     a->emitterSet = '-';
 
 
+    a->DO260Version = -1;
+    a->NICSuppA = -1;
+    a->NACp = -1;
+    a->SIL = -1;
+    a->SILSupp = -1;
+
+
     // mm->msgtype 32 is used to represent Mode A/C. These values can never change, so 
     // set them once here during initialisation, and don't bother to set them every 
     // time this ModeA/C is received again in the future
@@ -304,7 +311,89 @@ struct aircraft *interactiveReceiveData(struct modesMessage *mm) {
         }
 
         // copy NIC - included with position message
-        a->NIC = mm->NIC;
+        // copy TYPE and SUBTYPE
+        a->type = mm->metype;
+        a->subtype = mm->mesub;
+
+
+        // NIC is encoded in the type 
+        switch (mm->metype)
+        {
+
+            // surface position
+            case 5: a->NIC = 11; break;
+            case 6: a->NIC = 10; break;
+
+            case 7: 
+                if (a->NICSuppA == 1) {
+                    a->NIC = 9;
+                } else {
+                    a->NIC = 8; 
+                }
+
+                break;
+            
+
+            case 8: 
+
+                if (a->NICSuppA == 1 && a->NICSuppC == 1) {
+                    a->NIC = 7;
+                } else if (a->NICSuppA == 1 && a->NICSuppC == 0) {
+                    a->NIC = 6;
+                } else if (a->NICSuppA == 0 && a->NICSuppC == 1) {
+                    a->NIC = 6;
+                } else {
+                    a->NIC = 0; 
+                }
+
+                break;
+
+            // airborne position
+            case 9: a->NIC = 11; break;
+            case 10: a->NIC = 10; break;
+            
+            case 11:
+                if (a->NICSuppA == 1 && a->NICSuppB == 1) {
+                    a->NIC = 9;
+                } else {
+                    a->NIC = 8; 
+                }
+
+                break;
+
+
+            case 12: a->NIC = 7; break;
+            case 13: a->NIC = 6; break;
+            case 14: a->NIC = 5; break;
+            case 15: a->NIC = 4; break;
+            case 16: 
+                if (a->NICSuppA == 1 && a->NICSuppB == 1) {
+                    a->NIC = 3;
+                } else {
+                    a->NIC = 2; 
+                }
+
+                break;
+
+
+            case 17: a->NIC = 1; break;
+            case 18: a->NIC = 0; break;
+
+
+            default: a->NIC = 0;
+
+        }
+
+    }
+
+    // Check if Aircraft Operational Status data is received
+    if (mm->bFlags & MODES_ACFLAGS_ACOPSTATUS_VALID) {  
+        a->DO260Version = mm->DO260Version;
+        a->NICSuppA = mm->NICSuppA;
+        a->NACp = mm->NACp;
+        a->SIL = mm->SIL;
+        a->SILSupp = mm->SILSupp;
+
     }
 
 
@@ -365,7 +454,7 @@ void interactiveShowData(void) {
 
     if (Modes.interactive_rtl1090 == 0) {
         printf (
-"Hex     Mode  Sqwk  Flight   Alt    Spd  Hdg    Lat      Long   NIC  CAT   Sig  Msgs   Ti%c\n", progress);
+"Hex     Mode  Sqwk  Flight   Alt    Spd  Hdg    Lat      Long   VER  TYPE  NIC  NAC  SIL  CAT   Sig  Msgs   Ti%c\n", progress);
     } else {
         printf (
 "Hex    Flight   Alt      V/S GS  TT  SSR  G*456^ Msgs    Seen %c\n", progress);
@@ -443,9 +532,10 @@ void interactiveShowData(void) {
                         snprintf(strFl, 6, "%5d", altitude);
                     }
  
-                    printf("%06x  %-4s  %-4s  %-8s %5s  %3s  %3s  %7s %8s  %2d    %c:%1d    %3d %5d   %2d\n",
+                    printf("%06x  %-4s  %-4s  %-8s %5s  %3s  %3s  %7s %8s   %2d   %2d   %2d   %2d   %2d    %c:%1d    %3d %5d   %2d\n",
                     a->addr, strMode, strSquawk, a->flight, strFl, strGs, strTt,
-                    strLat, strLon, a->NIC, a->emitterSet, a->emitterCategory, signalAverage, msgs, (int)(now - a->seen));
+                    strLat, strLon, a->DO260Version, a->type, a->NIC, a->NACp, a->SIL, a->emitterSet, 
+                    a->emitterCategory, signalAverage, msgs, (int)(now - a->seen));
                 }
                 count++;
             }
