@@ -308,7 +308,7 @@ function refreshSelected() {
 	} else {
 	    html += 'n/a';
 	}
-	html += '</td><td>&nbsp;</td></tr>';
+	html += '</td><td>Rego: <a href=http://www.google.com/search?q=' + selected.rego + ' target=blank>' + selected.rego + '</td></tr>';
 
 	html += '<tr><td colspan="' + columns + '" align="center">Lat/Long: ';
 	if (selected && selected.vPosition) {
@@ -392,6 +392,7 @@ function refreshTableInfo() {
 	var html = '<table id="tableinfo" width="100%">';
 	html += '<thead style="background-color: #BBBBBB; cursor: pointer;">';
 	html += '<td onclick="setASC_DESC(\'0\');sortTable(\'tableinfo\',\'0\');">ICAO</td>';
+	html += '<td onclick="setASC_DESC(\'1\');sortTable(\'tableinfo\',\'1\');">REGO</td>';
 	html += '<td onclick="setASC_DESC(\'1\');sortTable(\'tableinfo\',\'1\');">Flight</td>';
 	html += '<td onclick="setASC_DESC(\'2\');sortTable(\'tableinfo\',\'2\');" ' +
 	    'align="right">Squawk</td>';
@@ -433,6 +434,7 @@ function refreshTableInfo() {
 		    }
 		    
 			html += '<td>' + tableplane.icao + '</td>';
+			html += '<td>' + tableplane.rego + '</td>';
 			html += '<td>' + tableplane.flight + '</td>';
 			if (tableplane.squawk != '0000' ) {
     			html += '<td align="right">' + tableplane.squawk + '</td>';
