@@ -50,11 +50,34 @@ static uint64_t mstime(void) {
 struct aircraft *interactiveCreateAircraft(struct modesMessage *mm) {
     struct aircraft *a = (struct aircraft *) malloc(sizeof(*a));
 
+
+    // load aircraft rego database
+    #include "mode_s_codes.h"
+
+
     // Default everything to zero/NULL
     memset(a, 0, sizeof(*a));
 
     // Now initialise things that should not be 0/NULL to their defaults
     a->addr = mm->addr;
+
+    // lookup aircraft rego based on addr
+    int numregos = sizeof(regDB)/sizeof(regDB[0]);
+    int j, found = 0;
+    for (j=0;j<numregos;j++)
+    {
+        if (regDB[j].addr == a->addr)
+        {
+            memcpy(a->reg,regDB[j].reg,8);
+            found = 1;
+            break;
+        }        
+    }
+    if (found == 0)
+    {
+        sprintf(a->reg,"-------");
+    }
+
     a->lat  = a->lon = 0.0;
     memset(a->signalLevel, mm->signalLevel, 8); // First time, initialise everything
                                                 // to the first signal strength
@@ -454,7 +477,7 @@ void interactiveShowData(void) {
 
     if (Modes.interactive_rtl1090 == 0) {
         printf (
-"Hex     Mode  Sqwk  Flight   Alt    Spd  Hdg    Lat      Long   VER  TYPE  NIC  NAC  SIL  CAT   Sig  Msgs   Ti%c\n", progress);
+"Hex     Rego    Mode  Sqwk  Flight   Alt    Spd  Hdg    Lat      Long   VER  TYPE  NIC  NAC  SIL   CAT    Sig  Msgs   Ti%c\n", progress);
     } else {
         printf (
 "Hex    Flight   Alt      V/S GS  TT  SSR  G*456^ Msgs    Seen %c\n", progress);
@@ -532,8 +555,8 @@ void interactiveShowData(void) {
                         snprintf(strFl, 6, "%5d", altitude);
                     }
  
-                    printf("%06x  %-4s  %-4s  %-8s %5s  %3s  %3s  %7s %8s   %2d   %2d   %2d   %2d   %2d    %c:%1d    %3d %5d   %2d\n",
-                    a->addr, strMode, strSquawk, a->flight, strFl, strGs, strTt,
+                    printf("%06x %-8s %-4s  %-4s  %-8s %5s  %3s  %3s  %7s %8s   %2d   %2d   %2d   %2d   %2d    %c:%1d    %3d %5d   %2d\n",
+                    a->addr, a->reg, strMode, strSquawk, a->flight, strFl, strGs, strTt,
                     strLat, strLon, a->DO260Version, a->type, a->NIC, a->NACp, a->SIL, a->emitterSet, 
                     a->emitterCategory, signalAverage, msgs, (int)(now - a->seen));
                 }

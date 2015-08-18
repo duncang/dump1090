@@ -192,6 +192,7 @@ struct client {
 // Structure used to describe an aircraft in iteractive mode
 struct aircraft {
     uint32_t      addr;           // ICAO address
+    char          reg[8];         // aircraft registration mark (lookup)
     char          flight[16];     // Flight number
     unsigned char signalLevel[8]; // Last 8 Signal Amplitudes
     int           altitude;       // Altitude
@@ -396,6 +397,15 @@ struct modesMessage {
     int  unit; 
     int  bFlags;                // Flags related to fields in this structure
 };
+
+// struct to store a pair
+typedef struct aircraftRego 
+{
+    char          reg[8];     // Aircraft registration. 7 chars max. 
+    uint32_t      addr;       // ICAO address
+} aircraftRego;
+
+#include "mode_s_codes.h"
 
 // ======================== function declarations =========================
 
